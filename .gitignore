@@ -1,0 +1,16 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.desktop.ini
+.Rdata
+.httr-oauth
+.DS_Store
+.quarto
+Base_COVID.R
+COVID_Hogares.xlsx
+COVID_PAMI-60.xlsx
+COVID_PAMI_60_wide.xlsx
+COVID_PAMI_mod.xlsx
+Fechas_obito_brote.xlsx
+INE_COVID.pptx
