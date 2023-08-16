@@ -32,14 +32,16 @@ ggpubr::ggarrange(
   ggplot(DF, aes(x = factor(Tiempo), y = UA_mod, group = ID, color = Tratamiento)) +
     geom_line() +
     labs(y = "UA", x = "Tiempo (días)") +
-    scale_color_brewer(palette = "Set2") +
+    scale_color_grey(start = .4, end = 0) +
+    # scale_color_brewer(palette = "Set2") +
     theme_light()
   ,
   # Variable respuesta: log(UA)
   ggplot(DF, aes(x = factor(Tiempo), y = UA_log, group = ID, color = Tratamiento)) +
     geom_line() +
     labs(y = "log(UA)", x = "Tiempo (días)") +
-    scale_color_brewer(palette = "Set2") +
+    scale_color_grey(start = .4, end = 0) +
+    # scale_color_brewer(palette = "Set2") +
     theme_light(), 
   common.legend = T, legend = "bottom", labels = "AUTO",font.label = list(size=12))
 
@@ -49,15 +51,20 @@ anova(fit)
 
 ### FIG. 1: Gráfico de perfiles----
 ggplot(data = DF, aes(x = Tiempo, y = UA_log, color = Tratamiento, group = Tratamiento)) +
-  geom_smooth(method = "loess", se = F) + 
-  scale_color_brewer(palette = "Set2") +
+  geom_smooth(aes(lty = Tratamiento), method = "loess", se = F) + 
+  # Colorblind friendly
+  # scale_color_brewer(palette = "Set2") +
+  # Greyscale
+  scale_color_grey(end = .9) +
   labs(y = "log(UA)") +
   scale_x_continuous(breaks = c(0,21,42,120,180), minor_breaks = F) +
   theme_light() + theme(legend.position = "bottom", legend.title = element_blank())
 
 ggsave("FIGS/Fig1.svg", width = 16, height = 10, units = "cm", dpi = 300)
 
-### Tabla S1: Asociación con VE----
+ggsave("FIGS/Fig1bw.svg", width = 16, height = 10, units = "cm", dpi = 300)
+
+### Tabla 1: Asociación con VE----
 DF %>% select(Sexo, Edad_cat, COVID_estudio, Brote_estudio, Diabetes, 
               HTA, EPOC, Obesidad_severa, Enf_renal_cronica, Insuf_cardiaca,
               Inmunodeficiencia, UA_log, ID) %>% 
@@ -114,13 +121,17 @@ descrTable(Insuf_cardiaca ~ Inmunodeficiencia,
 ### FIG. S2: Autocorrelación temporal----
 require(corrplot)
 # svg(filename = "FIGS/FigS2.svg", width = 4, height = 4)
+# svg(filename = "FIGS/FigS2bw.svg", width = 4, height = 4)
 DF %>% select(ID, Tiempo, UA_log) %>% 
   pivot_wider(values_from = "UA_log", names_from = "Tiempo") %>% select(-ID) %>% 
   cor(., use = "na.or.complete") %>% 
   corrplot(type = "upper", addCoef.col = "black",outline = F,
            diag = F, 
            mar = c(1,1,1,1), tl.col = "black",
-           col = COL2("PuOr"))
+           # Colorblind-friendly
+           # col = COL2("PuOr"))
+           # Greyscale
+           col = COL1("Greys"))
 # dev.off()
 
 #### MODELOS MARGINALES (GLS) ####
@@ -173,8 +184,11 @@ g1 = ggeffects::ggemmeans(model = gls2c,
 
 ggplot(g1, aes(x = x %>% as.character %>% as.numeric, y = predicted, color = group)) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  geom_line() +
-  scale_color_brewer(palette = "Set2") +
+  geom_line(aes(lty = group)) +
+  # Colorblind friendly
+  # scale_color_brewer(palette = "Set2") +
+  # Greyscale
+  scale_color_grey(start = .9, end = .2) +
   facet_wrap(.~ facet, ncol = 1,
              labeller = labeller(facet = c(No = "Brote estudio: No", Si = "Brote estudio: Si"))) +
   scale_x_continuous(breaks = c(0,21,42,120,180)) +
@@ -184,6 +198,7 @@ ggplot(g1, aes(x = x %>% as.character %>% as.numeric, y = predicted, color = gro
                           strip.text = element_text(face = "bold", size = 10))
 
 # ggsave("FIGS/FigS3.svg", width = 16, height = 20, units = "cm", dpi = 300)
+# ggsave("FIGS/FigS3bw.svg", width = 16, height = 20, units = "cm", dpi = 300)
 
 #### MODELA RESPUESTA NO LINEAL (GAMM) ####
 ### GAMM c/corCAR1----
@@ -207,23 +222,32 @@ appraise(gamm$gam)
 edf(gamm$gam)
 
 ### FIG. 2: Grafica curvas suavizadas----
-svg(filename = "FIGS/Fig2.svg", width = 6.3, height = 7.9)
+# svg(filename = "FIGS/Fig2.svg", width = 6.3, height = 7.9)
+# svg(filename = "FIGS/Fig2bw.svg", width = 6.3, height = 7.9)
 par(mfrow = c(2,1), cex = .75)
 # Brote: Si
 plot_smooth(gamm$gam, view = "Tiempo", plot_all = "Tratamiento", 
             cond = list(Brote_estudio="Si"), v0 = c(0,21,42,120,180),
             rug = F, rm.ranef = F,legend_plot_all = NULL, ylim = c(2,11),
             ylab = "log(UA)", main = "Brote COVID-19: Si",
-            col = c("#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F"))
+            # Colorblind friendly
+            # col = c("#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F"))
+            # Greyscale
+            col = c("grey80","grey70","grey50","grey30","grey20","grey10"),
+            lty = seq(1,12, by= 2))
 
 # Brote: No
 plot_smooth(gamm$gam, view = "Tiempo", plot_all = "Tratamiento", 
             cond = list(Brote_estudio="No"), v0 = c(0,21,42,120,180),
             rug = F, rm.ranef = F,legend_plot_all = F, ylim = c(2,11),
             ylab = "log(UA)",main = "Brote COVID-19: No",
-            col = c("#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F"))
+            # # Colorblind friendly
+            # col = c("#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F"))
+            # Greyscale
+            col = c("grey80","grey70","grey50","grey30","grey20","grey10"),
+            lty = seq(1,12, by= 2))
 
-dev.off()
+# dev.off()
 
 ### FIG. 3: Gráfico de los términos paramétricos----
 # svg(filename = "FIGS/Fig3.svg", width = 6.3, height = 7.9)
