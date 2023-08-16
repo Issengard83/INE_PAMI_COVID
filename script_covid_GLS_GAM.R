@@ -223,7 +223,7 @@ edf(gamm$gam)
 
 ### FIG. 2: Grafica curvas suavizadas----
 # svg(filename = "FIGS/Fig2.svg", width = 6.3, height = 7.9)
-# svg(filename = "FIGS/Fig2bw.svg", width = 6.3, height = 7.9)
+svg(filename = "FIGS/Fig2bw.svg", width = 6.3, height = 7.9)
 par(mfrow = c(2,1), cex = .75)
 # Brote: Si
 plot_smooth(gamm$gam, view = "Tiempo", plot_all = "Tratamiento", 
@@ -247,7 +247,7 @@ plot_smooth(gamm$gam, view = "Tiempo", plot_all = "Tratamiento",
             col = c("grey80","grey70","grey50","grey30","grey20","grey10"),
             lty = seq(1,12, by= 2))
 
-# dev.off()
+dev.off()
 
 ### FIG. 3: Gráfico de los términos paramétricos----
 # svg(filename = "FIGS/Fig3.svg", width = 6.3, height = 7.9)
