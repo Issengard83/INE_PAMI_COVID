@@ -71,10 +71,22 @@ DF %>% select(Sexo, Edad_cat, COVID_estudio, Brote_estudio, Diabetes,
   tbl_uvregression(y = UA_log, method = glmmTMB::glmmTMB,
                    formula = "{y} ~ {x} + (1|ID)",
                    pvalue_fun = function(x) style_pvalue(x, digits = 2),
-                   show_single_row = -UA_log) %>% 
+                   show_single_row = -UA_log,
+                   label = list(Sexo ~ "Sexo: Masculino",
+                                Edad_cat ~ "Grupo etario",
+                                COVID_estudio ~ "COVID durante estudio: Si",
+                                Brote_estudio ~ "Brote durante el estudio: Si",
+                                Diabetes ~ "Diabetes: Si",
+                                HTA ~ "HTA: Si",
+                                EPOC ~ "EPOC: Si",
+                                Obesidad_severa ~ "Obesidad severa: Si",
+                                Enf_renal_cronica ~ "Enf, renal crónica: Si",
+                                Insuf_cardiaca ~ "Insuf, cardiaca: Si",
+                                Inmunodeficiencia ~ "Inmunodeficiencia: Si")) %>% 
   bold_p() %>% 
   as_flex_table() %>% 
-  save_as_docx(path = "FIGS/tabS1.docx")
+  set_caption("Tabla 1. Resultados de los modelos lineales mixtos (LMM) univariados para selección de variables explicativas. Beta: coeficiente de regresión; 95% IC: intervalo de confianza al 95%. Los P-valores estadísticamente significativos se muestran en negritas.") %>% 
+  save_as_docx(path = "FIGS/tab1.docx")
 
 ### Asociación entre VE----
 require(compareGroups)
@@ -160,8 +172,14 @@ anova(gls2b)
 gls2c = update(gls2b, ~.-Inmunodeficiencia)
 anova(gls2c)
 
-### Tabla 1: Selección de variables
-MuMIn::model.sel(gls2, gls2a, gls2b, gls2c, rank = "AIC")
+### Tabla 2: Selección de variables
+MuMIn::model.sel(gls2, gls2a, gls2b, gls2c, rank = "AIC") %>% 
+  as_tibble() %>% 
+  mutate(Modelo = c("- Inmunodeficiencia","- Grupo etario", "- Insuf. cardíaca", "Saturado")) %>% 
+  select(Modelo, df,logLik, AIC, delta) %>%
+  flextable(cwidth = c(1.5,.5,1,1,1)) %>% 
+  set_caption("Tabla 2. Selección de variables explicativas en el modelo GLS con estructura de correlación temporal autorregresiva continua de primer orden (corCAR1) y heterogeneidad de varianzas (varIdent).") %>% 
+  save_as_docx(path = "./FIGS/tab2.docx")
 
 ### Limpia environment
 rm(list = setdiff(ls(),c("DF","gls2c")))
@@ -223,7 +241,7 @@ edf(gamm$gam)
 
 ### FIG. 2: Grafica curvas suavizadas----
 # svg(filename = "FIGS/Fig2.svg", width = 6.3, height = 7.9)
-# svg(filename = "FIGS/Fig2bw.svg", width = 6.3, height = 7.9)
+svg(filename = "FIGS/Fig2bw.svg", width = 6.3, height = 7.9)
 par(mfrow = c(2,1), cex = .75)
 # Brote: Si
 plot_smooth(gamm$gam, view = "Tiempo", plot_all = "Tratamiento", 
@@ -247,7 +265,7 @@ plot_smooth(gamm$gam, view = "Tiempo", plot_all = "Tratamiento",
             col = c("grey80","grey70","grey50","grey30","grey20","grey10"),
             lty = seq(1,12, by= 2))
 
-# dev.off()
+dev.off()
 
 ### FIG. 3: Gráfico de los términos paramétricos----
 # svg(filename = "FIGS/Fig3.svg", width = 6.3, height = 7.9)
