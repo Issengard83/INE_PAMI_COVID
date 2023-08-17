@@ -50,19 +50,33 @@ fit = lme(UA_log ~ Grupo*Vacuna, random = ~1|ID, data = DF)
 anova(fit)
 
 ### FIG. 1: Gráfico de perfiles----
-ggplot(data = DF, aes(x = Tiempo, y = UA_log, color = Tratamiento, group = Tratamiento)) +
-  geom_smooth(aes(lty = Tratamiento), method = "loess", se = F) + 
+g1 = ggplot(data = DF, aes(x = Tiempo, y = UA_log, color = Tratamiento, group = Tratamiento)) +
+  geom_smooth(method = "loess", se = F) + 
   # Colorblind friendly
-  # scale_color_brewer(palette = "Set2") +
-  # Greyscale
-  scale_color_grey(end = .9) +
+  scale_color_brewer(palette = "Set2") +
+  # # Greyscale
+  # scale_color_grey(end = .9) +
   labs(y = "log(UA)") +
   scale_x_continuous(breaks = c(0,21,42,120,180), minor_breaks = F) +
-  theme_light() + theme(legend.position = "bottom", legend.title = element_blank())
+  theme_light() + theme(legend.title = element_blank())
 
-ggsave("FIGS/Fig1.svg", width = 16, height = 10, units = "cm", dpi = 300)
+# Gráfico con leyenda
+g1 + theme(legend.position = "bottom")
 
-ggsave("FIGS/Fig1bw.svg", width = 16, height = 10, units = "cm", dpi = 300)
+## Guarda gráfico
+# ggsave("FIGS/Fig1.svg", width = 16, height = 10, units = "cm", dpi = 300)
+# ggsave("FIGS/Fig1bw.svg", width = 16, height = 10, units = "cm", dpi = 300)
+
+# # Gráfico sin leyenda
+# g1 + theme(legend.position = "none")
+# 
+# ## Guarda gráfico
+# ggsave("FIGS/Fig1sl.svg", width = 16, height = 10, units = "cm", dpi = 300)
+# 
+# # plot legend
+# require(grid)
+# grid.newpage()
+# grid.draw(cowplot::get_legend(g1))
 
 ### Tabla 1: Asociación con VE----
 DF %>% select(Sexo, Edad_cat, COVID_estudio, Brote_estudio, Diabetes, 
@@ -240,31 +254,27 @@ appraise(gamm$gam)
 edf(gamm$gam)
 
 ### FIG. 2: Grafica curvas suavizadas----
-# svg(filename = "FIGS/Fig2.svg", width = 6.3, height = 7.9)
-svg(filename = "FIGS/Fig2bw.svg", width = 6.3, height = 7.9)
+require(gridExtra)
+svg(filename = "FIGS/Fig2sl.svg", width = 6.3, height = 7.9)
 par(mfrow = c(2,1), cex = .75)
 # Brote: Si
 plot_smooth(gamm$gam, view = "Tiempo", plot_all = "Tratamiento", 
             cond = list(Brote_estudio="Si"), v0 = c(0,21,42,120,180),
-            rug = F, rm.ranef = F,legend_plot_all = NULL, ylim = c(2,11),
-            ylab = "log(UA)", main = "Brote COVID-19: Si",
+            rug = F, rm.ranef = F, legend_plot_all = F,
+            ylim = c(2,11), xlim = c(0,200), 
+            ylab = "log(UA)", hide.label = F, main = "(A)", adj = 0,
             # Colorblind friendly
-            # col = c("#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F"))
-            # Greyscale
-            col = c("grey80","grey70","grey50","grey30","grey20","grey10"),
-            lty = seq(1,12, by= 2))
+            col = c("#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F"))
+            
 
 # Brote: No
 plot_smooth(gamm$gam, view = "Tiempo", plot_all = "Tratamiento", 
             cond = list(Brote_estudio="No"), v0 = c(0,21,42,120,180),
-            rug = F, rm.ranef = F,legend_plot_all = F, ylim = c(2,11),
-            ylab = "log(UA)",main = "Brote COVID-19: No",
-            # # Colorblind friendly
-            # col = c("#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F"))
-            # Greyscale
-            col = c("grey80","grey70","grey50","grey30","grey20","grey10"),
-            lty = seq(1,12, by= 2))
-
+            rug = F, rm.ranef = F,legend_plot_all = F,
+            ylim = c(2,11), xlim = c(0,200),
+            ylab = "log(UA)", hide.label = F, main = "(B)", adj = 0,
+            # Colorblind friendly
+            col = c("#66C2A5","#FC8D62","#8DA0CB","#E78AC3","#A6D854","#FFD92F"))
 dev.off()
 
 ### FIG. 3: Gráfico de los términos paramétricos----
@@ -272,10 +282,14 @@ dev.off()
 par(mfrow = c(2,1), cex = .75)
 plot_parametric(gamm$gam, pred = list(Tratamiento = levels(DF$Tratamiento)),
                 cond = list(Brote_estudio="Si"), xlim = c(4, 12),
-                main = "Brote COVID-19: Si", xlab = "log(UA)")
+                xlab = "log(UA)", main = "")
+title(main = "(A)", adj = 0)
+
 plot_parametric(gamm$gam, pred = list(Tratamiento = levels(DF$Tratamiento)),
                 cond = list(Brote_estudio="No"),  xlim = c(4, 12),
-                main = "Brote COVID-19: No", xlab = "log(UA)")
+                xlab = "log(UA)", main = "")
+title(main = "(B)", adj = 0)
+
 
 # dev.off()
 
